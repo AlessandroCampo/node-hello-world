@@ -3,28 +3,68 @@ const http = require('http');
 const port = process.env.PORT || '8080';
 const host = process.env.HOST || 'localhost';
 const test_variable = process.env.TEST_VARIABLE;
-const resHTML = `<h1> Welcome to my page! </h1> <p> Here is the variable you were looking for: <strong>${test_variable}</strong> </p>
-<p>Naviagte to /bonus if you need an inspirational quote!</p>
+const path = require('path');
+const fs = require('fs');
+const resHTML = `<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <h1> Welcome to my page! </h1> <p> Here is the variable you were looking for: <strong>${test_variable}</strong> </p>
+        <p>Naviagte to /bonus if you need an inspirational quote!</p>
+    </body>
+</html>
 `;
 const quotes = require('./quotes');
+const favicon = path.join(__dirname, 'favicon.ico');
 
 
 
 const returnRandomElementFromArray = (array) => {
-    const fixed_array = array.map(el => {
-        if (el.includes('’')) {
-            return el.replace(/’/g, "'");
-        }
-        return el;
-    });
-    let random_index = Math.floor(Math.random() * fixed_array.length);
-    return fixed_array[random_index];
+    let random_index = Math.floor(Math.random() * array.length);
+    return array[random_index];
 };
 
 
 const server = http.createServer((req, res) => {
+    console.log(req.url)
     const quote = returnRandomElementFromArray(quotes);
-    const res_html_whit_quote = `<h1> This is your motivational quote of the day! </h1> <h2> ${quote} </h2>`;
+    if (req.url === `/favicon.ico`) {
+        fs.readFile(favicon, (err, data) => {
+            if (err) {
+                res.writeHead(404, {
+                    "Content-Type": "text/html"
+                });
+                res.end('');
+                return;
+            }
+
+            res.writeHead(200, {
+                "Content-Type": "image/x-icon"
+            });
+
+            res.end(data);
+        })
+
+
+        return
+    }
+    const res_html_whit_quote = `<!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document</title>
+        
+        </head>
+        <body>
+            <h1> This is your motivational quote of the day! </h1> 
+            <h2> ${quote} </h2>
+        </body>
+    </html>`;
     let res_content = req.url.includes('bonus') ? res_html_whit_quote : resHTML;
     res.writeHead(200, {
         "Content-Type": "text/html"
